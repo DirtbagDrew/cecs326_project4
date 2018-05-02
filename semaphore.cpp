@@ -1,6 +1,6 @@
 // This software may be used in your CECS326 programs
 
-// simple implementation of SEMAPHORE class with some error 
+// simple implementation of SEMAPHORE class with some error
 // and signal handling
 
 #include "semaphore.h"
@@ -29,7 +29,7 @@ int SEMAPHORE::V(int id){
 	struct sembuf *v = &((vset+id)->sb);
 	while(((retval=semop(semid,v,1))==-1)&&(errno==EINTR));
 	return retval;
-}	
+}
 
 void SEMAPHORE::set_sembuf_p(int k, int op, int flg){
 	(pset+k)->sb.sem_num = (short) k;
@@ -50,7 +50,7 @@ int SEMAPHORE::init() {
 		set_sembuf_p(k, -1, 0 /*suspend*/);
 		set_sembuf_v(k, 1, 0 /*suspend*/);
 	}
-	
+
 	// initialize all to zero
 	semun arg;
 	ushort initv[size];
@@ -65,4 +65,3 @@ SEMAPHORE::~SEMAPHORE() {
 	delete pset;
 	delete vset;
 }
-
