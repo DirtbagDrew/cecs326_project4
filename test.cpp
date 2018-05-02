@@ -1,66 +1,63 @@
+#include <cstdlib>
 #include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdint.h>
-#include <sys/mman.h>
-#include <semaphore.h>
-#include <string.h>
+#include <iostream>
+#include <sys/wait.h>
+#include "semaphore.h"
+using namespace std;
 
-#define SEMAPHORES 1
+const int MAXCHAR = 10;
+const int BUFFSIZE = 3;
+enum{semU, semV,semW};
 
-int main()
-{
-  char *x = mmap(NULL, sizeof(char)*10, PROT_READ | PROT_WRITE,
-               MAP_SHARED | MAP_ANONYMOUS, -1, 0);
-  strcpy(x, "0");
 
-  int i;
-  int child;
-  sem_t *semaphore = mmap(NULL, sizeof(sem_t), PROT_READ | PROT_WRITE,
-             MAP_SHARED | MAP_ANONYMOUS, -1, 0);
-  int temp;
-  sem_init (semaphore, 1, 1);
-  for (i=0; i<10; ++i)
+//g++ main.cpp -o main -lpthread
+
+
+int main() {
+  // PID for the fork
+  pid_t childPID1, childPID2,childPID3,childPID4;
+
+  SEMAPHORE sem(3);
+
+  sem.V(semU);
+  sem.V(semV);
+  sem.V(semW);
+  sem.V(semW);
+
+  childPID1 = fork();
+  string end;
+  if(childPID1)  //parent
+  {
+
+  }
+  else
+  {
+    childPID2=fork();
+    if(childPID2) //first child
     {
-      child = fork();
-      if (child==0)
+
+    }
+    else
     {
-      usleep(rand()%20000);
+      childPID3=fork();
+      if(childPID3) //second child
+      {
 
-      if (SEMAPHORES)
-        sem_wait(semaphore);
-      printf("[%d] Trying to access the resource\n", getpid());
-      temp=atoi(x);
-      printf("[%d] Using the resource\n", getpid());
-      temp++;
-      sprintf(x, "%d", temp);
+      }
+      else
+      {
+        childPID4=fork();
+        if(childPID4) //third child
+        {
 
-      if (SEMAPHORES)
-        sem_post(semaphore);
-      printf("[%d] Just used the resource\n", getpid());
-      usleep(rand()%20000);
+        }
+        else  //fourth child
+        {
 
-      if (SEMAPHORES)
-        sem_wait(semaphore);
-      printf("[%d] Trying to access the resource\n", getpid());
-      temp=atoi(x);
-      printf("[%d] Using the resource\n", getpid());
-      temp++;
-      sprintf(x, "%d", temp);
-
-      if (SEMAPHORES)
-        sem_post(semaphore);
-      printf("[%d] Just used the resource\n", getpid());
-      printf("[%d] EXITING\n", getpid());
-      exit(1);
+        }
+      }
     }
-    }
-
-   while (wait(NULL)>=0);
-
-  printf("x is: %s\n", x);
-  munmap(x, sizeof(int));
-  munmap(semaphore, sizeof(sem_t));
-
+  }
+  
   return 0;
 }
