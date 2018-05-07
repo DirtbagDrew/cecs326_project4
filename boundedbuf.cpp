@@ -1,4 +1,4 @@
-#include <iostream.h>
+#include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -8,7 +8,8 @@
 #include <sys/wait.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
-#include "semaphore.h"
+#include "semaphore.cpp"
+using namespace std;
 
 const int MAXCHAR = 10;
 const int BUFFSIZE = 3;
@@ -49,7 +50,7 @@ void consumer_proc(SEMAPHORE &sem, char *shmBUF) {
 		sem.P(TAKE_ITEM);
 		tmp = *(shmBUF+k%BUFFSIZE);
 		sem.V(PUT_ITEM);
-		cout << "(" << getpid() << ")  " 
+		cout << "(" << getpid() << ")  "
 				<< "buf[" << k%BUFFSIZE << "] "
 				<< tmp << endl;
 	}
@@ -77,4 +78,3 @@ void parent_cleanup (SEMAPHORE &sem, int shmid) {
 	shmctl(shmid, IPC_RMID, NULL);	/* cleaning up */
 	sem.remove();
 } // parent_cleanup
-
