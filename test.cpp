@@ -1,3 +1,10 @@
+/*
+CECS 326
+Project 4: Programming with semaphores and shared memory
+Andrew Myer
+012939730
+*/
+
 #include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,7 +24,8 @@ void critSec(SEMAPHORE &, bool *);
 void parentProc(int killArray[]);
 
 int main() {
-
+	/*create shared memory for the boolean flag that is set to true
+	to show the u process is available*/
 	int shmid = shmget(IPC_PRIVATE, sizeof(bool), PERMS);
 	bool *shmBUF = (bool *)shmat(shmid, 0, SHM_RND);
 	*shmBUF=true;
@@ -25,23 +33,28 @@ int main() {
   // PID for the fork
   pid_t childPID;
 
+	//initalize semaphore
   SEMAPHORE sem(1);
 
+	//set semaphore to 2
   sem.V(UandV);
   sem.V(UandV);
 
+	/*array of childPID's to be used when the the parent process kills the
+	child processes*/
 	int killArray[4];
 
+	//creates four child processes
 	for(int i=0;i<4;i++)
 	{
 		childPID = fork();
-		if(childPID)
+		if(childPID) //parent process
 		{
 			killArray[i]=childPID;
 		}
-		else
+		else //child process
 		{
-			while(true)
+			while(true) //child processes can't proceed from here
 			{
 				critSec(sem,shmBUF);
 			}
@@ -52,7 +65,14 @@ int main() {
 
   return 0;
 }
-
+/*-------------------------------------------------------------------
+creates a random number in a loop until that number is divisible by
+100 or a multiple of uov.
+param
+	int pov: the number for the P processes or the V process
+return
+	null
+--------------------------------------------------------------------*/
 void proc(int uov)
 {
 	int temp;
@@ -67,25 +87,42 @@ void proc(int uov)
 	}
 }
 
+/*-------------------------------------------------------------------
+Enters a critical section so that no other processes can work on the same
+number as the current process. since sem(UandV) is initially set to 2
+allows for 2 processes to run concurrently
+param
+	SEMAPHORE &sem: the semaphore object to be used to order the processes
+	bool *shmBUF: the boolean flag to show if the U process is available
+return
+	null
+--------------------------------------------------------------------*/
 void critSec(SEMAPHORE &sem, bool *shmBUF)
 {
 	int U=827395909;
 	int V=962094883;
   sem.P(UandV);
 	bool u=*shmBUF;
-  if(u)
+  if(u)//u is available
   {
-    *shmBUF=false;
+    *shmBUF=false;	//makes U unavailable for other processes
 		proc(U);
     *shmBUF=true;
   }
-  else
+  else //u is not available, run V process
   {
 		proc(V);
   }
   sem.V(UandV);
 }
-
+/*-------------------------------------------------------------------
+for the parent process to terminate all children processes and exit
+when the user inputs "!wq"
+param
+	int killArray[]: array with all the childIDs to terminate
+return
+	null
+--------------------------------------------------------------------*/
 void parentProc(int killArray[])
 {
 	string end;
@@ -98,7 +135,7 @@ void parentProc(int killArray[])
 			cout<<"exiting..."<<endl;
 			for(int i=0;i<4;i++)
 			{
-				kill(killArray[i],SIGTERM);
+				kill(killArray[i],SIGTERM); //command to kill child process
 			}
 			exit(0);  //process terminates, close out program
 		}
