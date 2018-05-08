@@ -21,7 +21,7 @@ using namespace std;
 enum{UandV};
 
 void critSec(SEMAPHORE &, bool *);
-void parentProc(int killArray[]);
+void parentProc(int killArray[], SEMAPHORE &, int shmid);
 
 int main() {
 	/*create shared memory for the boolean flag that is set to true
@@ -61,7 +61,7 @@ int main() {
 		}
 	}
 
-	parentProc(killArray);
+	parentProc(killArray,sem,shmid);
 
   return 0;
 }
@@ -116,14 +116,14 @@ void critSec(SEMAPHORE &sem, bool *shmBUF)
   sem.V(UandV);
 }
 /*-------------------------------------------------------------------
-for the parent process to terminate all children processes and exit
-when the user inputs "!wq"
+for the parent process to terminate all children processes, clean up
+and exit semaphore and shared boolean when the user inputs "!wq"
 param
 	int killArray[]: array with all the childIDs to terminate
 return
 	null
 --------------------------------------------------------------------*/
-void parentProc(int killArray[])
+void parentProc(int killArray[],SEMAPHORE &sem, int shmid)
 {
 	string end;
 	while(true)
@@ -137,6 +137,8 @@ void parentProc(int killArray[])
 			{
 				kill(killArray[i],SIGTERM); //command to kill child process
 			}
+			shmctl(shmid, IPC_RMID, NULL);
+			sem.remove();
 			exit(0);  //process terminates, close out program
 		}
 	}
