@@ -24,8 +24,13 @@ void critSec(SEMAPHORE &, bool *);
 void parentProc(int killArray[], SEMAPHORE &, int shmid);
 
 int main() {
-	/*create shared memory for the boolean flag that is set to true
-	to show the u process is available*/
+
+	//initialize the smeaphore and set to two
+	SEMAPHORE sem(1);
+	sem.V(UandV);
+  sem.V(UandV);
+
+	//set shared variable to a boolean and set to true
 	int shmid = shmget(IPC_PRIVATE, sizeof(bool), PERMS);
 	bool *shmBUF = (bool *)shmat(shmid, 0, SHM_RND);
 	*shmBUF=true;
@@ -33,19 +38,12 @@ int main() {
   // PID for the fork
   pid_t childPID;
 
-	//initalize semaphore
-  SEMAPHORE sem(1);
-
-	//set semaphore to 2
-  sem.V(UandV);
-  sem.V(UandV);
-
 	/*array of childPID's to be used when the the parent process kills the
 	child processes*/
 	int killArray[4];
 
 	//creates four child processes
-	for(int i=0;i<4;i++)
+	/*for(int i=0;i<4;i++)
 	{
 		childPID = fork();
 		if(childPID) //parent process
@@ -59,7 +57,56 @@ int main() {
 				critSec(sem,shmBUF);
 			}
 		}
+	}*/
+	childPID = fork();
+	if(childPID) //parent process
+	{
+		killArray[0]=childPID;
+		childPID = fork();
+		if(childPID) //parent process
+		{
+			killArray[1]=childPID;
+			childPID = fork();
+			if(childPID) //parent process
+			{
+				killArray[2]=childPID;
+				childPID = fork();
+				if(childPID) //parent process
+				{
+					killArray[3]=childPID;
+				}
+				else //child process
+				{
+					while(true) //child processes can't proceed from here
+					{
+						critSec(sem,shmBUF);
+					}
+				}
+			}
+			else //child process
+			{
+				while(true) //child processes can't proceed from here
+				{
+					critSec(sem,shmBUF);
+				}
+			}
+		}
+		else //child process
+		{
+			while(true) //child processes can't proceed from here
+			{
+				critSec(sem,shmBUF);
+			}
+		}
 	}
+	else //child process
+	{
+		while(true) //child processes can't proceed from here
+		{
+			critSec(sem,shmBUF);
+		}
+	}
+
 
 	parentProc(killArray,sem,shmid);
 
@@ -75,11 +122,11 @@ return
 --------------------------------------------------------------------*/
 void proc(int uov)
 {
-	int temp;
+	int tmp;
 	while(true)
 	{
-		temp=rand();
-		if((temp%uov==0)||temp<100)
+		tmp=rand();
+		if((tmp%uov==0)||tmp<100)
 		{
 			break;
 			break;
@@ -101,6 +148,7 @@ void critSec(SEMAPHORE &sem, bool *shmBUF)
 {
 	int U=827395909;
 	int V=962094883;
+
   sem.P(UandV);
 	bool u=*shmBUF;
   if(u)//u is available
