@@ -43,70 +43,21 @@ int main() {
 	int killArray[4];
 
 	//creates four child processes
-	/*for(int i=0;i<4;i++)
+	for(int i=0;i<4;i++)
 	{
-		childPID = fork();
-		if(childPID) //parent process
+		//childPID = fork();
+		if(childPID=fork()==0) //child process
+		{
+			while(true)
+			{
+				critSec(sem,shmBUF);	//infinite while, can't continue
+			}
+		}
+		else //parent process
 		{
 			killArray[i]=childPID;
 		}
-		else //child process
-		{
-			while(true) //child processes can't proceed from here
-			{
-				critSec(sem,shmBUF);
-			}
-		}
-	}*/
-	childPID = fork();
-	if(childPID) //parent process
-	{
-		killArray[0]=childPID;
-		childPID = fork();
-		if(childPID) //parent process
-		{
-			killArray[1]=childPID;
-			childPID = fork();
-			if(childPID) //parent process
-			{
-				killArray[2]=childPID;
-				childPID = fork();
-				if(childPID) //parent process
-				{
-					killArray[3]=childPID;
-				}
-				else //child process
-				{
-					while(true) //child processes can't proceed from here
-					{
-						critSec(sem,shmBUF);
-					}
-				}
-			}
-			else //child process
-			{
-				while(true) //child processes can't proceed from here
-				{
-					critSec(sem,shmBUF);
-				}
-			}
-		}
-		else //child process
-		{
-			while(true) //child processes can't proceed from here
-			{
-				critSec(sem,shmBUF);
-			}
-		}
 	}
-	else //child process
-	{
-		while(true) //child processes can't proceed from here
-		{
-			critSec(sem,shmBUF);
-		}
-	}
-
 
 	parentProc(killArray,sem,shmid);
 
@@ -149,19 +100,19 @@ void critSec(SEMAPHORE &sem, bool *shmBUF)
 	int U=827395909;
 	int V=962094883;
 
-  sem.P(UandV);
+	sem.P(UandV);
 	bool u=*shmBUF;
-  if(u)//u is available
-  {
-    *shmBUF=false;	//makes U unavailable for other processes
+	if(u)//u is available
+	{
+		*shmBUF=false;	//makes U unavailable for other processes
 		proc(U);
-    *shmBUF=true;
-  }
-  else //u is not available, run V process
-  {
+		*shmBUF=true;
+	}
+	else //u is not available, run V process
+	{
 		proc(V);
-  }
-  sem.V(UandV);
+	}
+	sem.V(UandV);
 }
 /*-------------------------------------------------------------------
 for the parent process to terminate all children processes, clean up
